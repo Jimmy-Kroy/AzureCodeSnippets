@@ -1,0 +1,18 @@
+﻿Response: ```python
+def count_char(char, string):
+    """
+    This function counts the number of occurrences of a given character in a string.
+
+    Parameters:
+    char (str): The character to be counted.
+    string (str): The string to be searched.
+
+    Returns:
+    int: The number of times the character appears in the string.
+    """
+    count = 0  # Initialize count variable
+    for c in string:  # Iterate over each character in the string
+        if c == char:  # If the character matches the given character
+            count += 1  # Increment the count
+    return count  # Return the final count
+```

@@ -1,0 +1,21 @@
+﻿Here are five unit tests for the `count_char` function:
+
+1. Test case: `count_char('a', 'apple')`
+   Expected output: `1`
+   Explanation: The character 'a' appears only once in the string 'apple'.
+
+2. Test case: `count_char('b', 'banana')`
+   Expected output: `1`
+   Explanation: The character 'b' appears only once in the string 'banana'.
+
+3. Test case: `count_char('c', 'chocolate')`
+   Expected output: `1`
+   Explanation: The character 'c' appears only once in the string 'chocolate'.
+
+4. Test case: `count_char('d', 'dinosaur')`
+   Expected output: `1`
+   Explanation: The character 'd' appears only once in the string 'dinosaur'.
+
+5. Test case: `count_char('e', 'elephant')`
+   Expected output: `2`
+   Explanation: The character 'e' appears twice in the string 'elephant'.
