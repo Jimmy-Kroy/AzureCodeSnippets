@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/SemanticKernelApp/appsettings.json
+/SemanticKernelApp/appsettings.json
+/AzureAIServices/Exercise001/appsettings.json
