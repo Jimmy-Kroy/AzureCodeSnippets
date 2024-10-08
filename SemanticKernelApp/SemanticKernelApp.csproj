@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.2.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.2.0-alpha" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +25,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="data\recentlyplayed.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Prompts\ChordProgressions\SuggestChords\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Prompts\ChordProgressions\SuggestChords\skprompt.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Prompts\SuggestChords\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Prompts\SuggestChords\skprompt.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Prompts\SuggestConcert\config.json">
