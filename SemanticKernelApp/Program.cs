@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Threading.Channels;
 using System.Collections.Generic;
 using Azure.Core;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 /* Built-in plugins 
 ConversationSummaryPlugin - Summarizes conversation
@@ -51,8 +52,9 @@ namespace SemanticKernelApp
                 builder.AddAzureOpenAIChatCompletion(oaiModelName, oaiEndpoint, oaiKey);
                 var kernel = builder.Build();
 
-
-                await RecommendsChordsV2(kernel);
+                await TellJoke(kernel);
+                //await RecommendTrip(kernel);
+                //await RecommendsChordsV2(kernel);
                 //await RecommendsChords(kernel);
                 //string request = @"I have a vacation from June 1 to July 22. I want to go to Greece. I live in Chicago.";
                 //await ExtractTravelerData(kernel, request);
@@ -78,6 +80,56 @@ namespace SemanticKernelApp
             {
                 Console.WriteLine(ex);
             }
+        }
+
+        public static async Task TellJoke(Kernel kernel)
+        {
+            //Sense of humor
+            string history = FileReader.ReadLinesFromFile("./data/jokes.txt", 1, 100);
+
+            history += "Why don't scientists trust atoms? Because they make up everything!\n";
+            history += "Why don't skeletons fight each other? They don't have the guts!\n";
+            history += "Why don't scientists trust atoms anymore? Because they make up everything, but they never share their electrons!\n";
+
+            Console.WriteLine(history);
+
+            var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
+
+            var result = await kernel.InvokeAsync<string>(prompts["TellJoke"],
+                new KernelArguments() { { "history", history } });
+
+            Console.WriteLine(result);
+        }
+
+
+        public static async Task RecommendTrip(Kernel kernel)
+        {
+            //List<ChatHistory> history = new List<ChatHistory>();
+            //You also use a ChatHistory object to store the user's conversation.
+            ChatHistory history = []; 
+
+            var prompts = kernel.ImportPluginFromPromptDirectory("Prompts/TravelPlugins");
+
+            string input = @"I'm planning an anniversary trip with my spouse. We like hiking, mountains, and beaches. Our travel budget is $15000";
+
+            var result = await kernel.InvokeAsync<string>(prompts["SuggestDestinations"],
+                new KernelArguments() { { "input", input } });
+
+            Console.WriteLine(result);
+            history.AddUserMessage(input);
+            history.AddAssistantMessage(result);
+
+            string destination = "Cambodia";
+
+            result = await kernel.InvokeAsync<string>(prompts["SuggestActivities"],
+                new KernelArguments() 
+                {
+                    { "history", history },
+                    { "destination", destination },
+                }
+            );
+
+            Console.WriteLine(result);
         }
 
         /* In this example, CreatePluginFromPromptDirectory returns a KernelPlugin object. 

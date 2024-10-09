@@ -1,0 +1,18 @@
+﻿{
+  "schema": 1,
+  "type": "completion",
+  "description": "Tell a new funny joke",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 4000,
+      "temperature": 1
+    }
+  },
+  "input_variables": [
+    {
+      "name": "history",
+      "description": "Example of funny jokes",
+      "required": true
+    }
+  ]
+}
