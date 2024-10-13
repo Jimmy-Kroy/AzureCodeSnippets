@@ -16,6 +16,7 @@ using System.Threading.Channels;
 using System.Collections.Generic;
 using Azure.Core;
 using Microsoft.SemanticKernel.ChatCompletion;
+using SemanticKernelApp.Plugins.TodoList;
 
 /* Built-in plugins 
 ConversationSummaryPlugin - Summarizes conversation
@@ -52,7 +53,10 @@ namespace SemanticKernelApp
                 builder.AddAzureOpenAIChatCompletion(oaiModelName, oaiEndpoint, oaiKey);
                 var kernel = builder.Build();
 
-                await TellJoke(kernel);
+
+                //await CallNativeFunctionsV2(kernel);
+                //await CallNativeFunctions(kernel);
+                //await TellJoke(kernel);
                 //await RecommendTrip(kernel);
                 //await RecommendsChordsV2(kernel);
                 //await RecommendsChords(kernel);
@@ -82,6 +86,55 @@ namespace SemanticKernelApp
             }
         }
 
+        public static async Task CallNativeFunctionsV2(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<MusicLibraryPlugin>();
+
+            var result = await kernel.InvokeAsync<string>(
+                "MusicLibraryPlugin", "GetRecentlyPlayedSongs");
+            Console.WriteLine(result + "\n");
+
+
+            result = await kernel.InvokeAsync<string>(
+                "MusicLibraryPlugin", "AddToRecentlyPlayed",
+                new KernelArguments()
+                {
+                    ["artist"] = "Tiara",
+                    ["song"] = "Danse",
+                    ["genre"] = "French pop, electropop, pop"
+                });
+
+            Console.WriteLine(result + "\n");
+
+            result = await kernel.InvokeAsync<string>(
+                "MusicLibraryPlugin", "GetRecentlyPlayedSongs");
+            Console.WriteLine(result + "\n");
+        }
+
+        public static async Task CallNativeFunctions(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<TodoListPlugin>();
+
+            var result = await kernel.InvokeAsync<string>(
+                "TodoListPlugin",
+                "GetTasks");
+            Console.WriteLine(result + "\n");
+
+            result = await kernel.InvokeAsync<string>(
+                "TodoListPlugin",
+                "CompleteTask",
+              new KernelArguments 
+              { 
+                  { "task", "Buy groceries" } 
+              });
+            Console.WriteLine(result + "\n");
+
+            result = await kernel.InvokeAsync<string>(
+                "TodoListPlugin", 
+                "GetTasks");
+            Console.WriteLine(result + "\n");
+        }
+
         public static async Task TellJoke(Kernel kernel)
         {
             //Sense of humor
@@ -100,7 +153,6 @@ namespace SemanticKernelApp
 
             Console.WriteLine(result);
         }
-
 
         public static async Task RecommendTrip(Kernel kernel)
         {

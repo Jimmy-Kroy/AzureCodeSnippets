@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace SemanticKernelApp.Plugins
 {
     using System.ComponentModel;
+    using System.Numerics;
     using System.Text.Json;
     using System.Text.Json.Nodes;
     using Microsoft.SemanticKernel;
@@ -26,6 +27,14 @@ namespace SemanticKernelApp.Plugins
         {
             string dir = Directory.GetCurrentDirectory();
             string content = File.ReadAllText($"{dir}/data/musiclibrary.json");
+            return content;
+        }
+
+        [KernelFunction, Description("Get a list of recently played songs")]
+        public static string GetRecentlyPlayedSongs()
+        {
+            string dir = Directory.GetCurrentDirectory();
+            string content = File.ReadAllText($"{dir}/data/recentlyplayed.json");
             return content;
         }
 
