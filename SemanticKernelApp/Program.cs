@@ -17,6 +17,9 @@ using System.Collections.Generic;
 using Azure.Core;
 using Microsoft.SemanticKernel.ChatCompletion;
 using SemanticKernelApp.Plugins.TodoList;
+using System.Net.Http.Json;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 /* Built-in plugins 
 ConversationSummaryPlugin - Summarizes conversation
@@ -53,7 +56,15 @@ namespace SemanticKernelApp
                 builder.AddAzureOpenAIChatCompletion(oaiModelName, oaiEndpoint, oaiKey);
                 var kernel = builder.Build();
 
-
+                await GetNeededRecipeIngredients(kernel);
+                //await AddSong(kernel);
+                //await GetConcertRecommendationV2(kernel);
+                // Result: Based on your recently played music, I recommend you listen to "Kids" by MGMT.
+                // It has a similar vibe to the songs you mentioned and I think you'll enjoy it!
+                //await GetConcertRecommendation(kernel);
+                //await SuggestNextSong(kernel);
+                //await suggestRecipesV2(kernel);
+                //await suggestRecipes(kernel);
                 //await CallNativeFunctionsV2(kernel);
                 //await CallNativeFunctions(kernel);
                 //await TellJoke(kernel);
@@ -78,12 +89,125 @@ namespace SemanticKernelApp
 
                 Console.WriteLine("Semantic Kernel app finished.");
                 Console.ReadLine();
-
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+        }
+
+        public static async Task GetNeededRecipeIngredients(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<IngredientsPlugin>();
+            kernel.ImportPluginFromPromptDirectory("Prompts/IngredientPrompts");
+
+            //var result = await kernel.InvokeAsync<string>(
+            //    "IngredientsPlugin", "GetIngredients");
+            //Console.WriteLine(result + "\n");
+
+            //var recipe = "Roasted Asparagus";
+            //var result = await kernel.InvokeAsync<string>(
+            //    "IngredientsPlugin", "GetRecipe",
+            //    new KernelArguments()
+            //    {
+            //        { "recipe",  recipe }
+            //    });
+
+            // Set the ToolCallBehavior property
+            OpenAIPromptExecutionSettings settings = new()
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+            };
+
+            string prompt = @"What ingredients am I missing from my current list of ingredients 
+                to make a recipe for Curried Lentils and Rice?";
+
+            // Use the settings to automatically invoke plugins based on the prompt
+            var result = await kernel.InvokePromptAsync(prompt, new(settings));
+
+            Console.WriteLine(result);
+            //Roasted Asparagus
+            //- None. You have all the necessary ingredients.
+
+            //Curried Lentils and Rice
+            //Based on the recipe for Curried Lentils and Rice, the ingredients you are missing from your current list are:
+            //-1 quart of beef broth
+            //- 1 / 2 cup of basmati rice
+        }
+
+        public static async Task SuggestNextSong(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<MusicLibraryPlugin>();
+
+            string prompt = @"This is a list of music available to the user:
+                {{MusicLibraryPlugin.GetMusicLibrary}} 
+
+                This is a list of music the user has recently played:
+                {{MusicLibraryPlugin.GetRecentPlays}}
+
+                Based on their recently played music, suggest a song from
+                the list to play next";
+
+            var result = await kernel.InvokePromptAsync(prompt);
+            Console.WriteLine(result);
+        }
+
+        /* In this example, the prompt calls ConversationSummaryPlugin.SummarizeConversation on the provided $history input. 
+         * The function takes the user's background information and summarizes it, and the result is used to retrieve the 
+         * list of relevant recipes. The ConversationSummaryPlugin plugin must be added to the kernel builder for the prompt 
+         * to work correctly. */
+        public static async Task suggestRecipesV2(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<ConversationSummaryPlugin>();
+
+            string history = @"In the heart of my bustling kitchen, I have embraced the challenge 
+                of satisfying my family's diverse taste buds and navigating their unique tastes. 
+                With a mix of picky eaters and allergies, my culinary journey revolves around 
+                exploring a plethora of vegetarian recipes.
+
+                One of my kids is a picky eater with an aversion to anything green, while another 
+                has a peanut allergy that adds an extra layer of complexity to meal planning. 
+                Armed with creativity and a passion for wholesome cooking, I've embarked on a 
+                flavorful adventure, discovering plant-based dishes that not only please the 
+                picky palates but are also heathy and delicious.";
+
+            string prompt = @"User information: 
+                {{ConversationSummaryPlugin.SummarizeConversation $history}}
+
+                Given this user's background information, provide a list of relevant recipes.";
+
+            var result = await kernel.InvokePromptAsync(prompt, 
+                new KernelArguments() 
+                {
+                    { "history", history }
+                });
+
+            Console.WriteLine(result);
+        }
+
+        public static async Task suggestRecipes(Kernel kernel)
+        {
+            string history = @"In the heart of my bustling kitchen, I have embraced the challenge 
+                of satisfying my family's diverse taste buds and navigating their unique tastes. 
+                With a mix of picky eaters and allergies, my culinary journey revolves around 
+                exploring a plethora of vegetarian recipes.
+
+                One of my kids is a picky eater with an aversion to anything green, while another 
+                has a peanut allergy that adds an extra layer of complexity to meal planning. 
+                Armed with creativity and a passion for wholesome cooking, I've embarked on a 
+                flavorful adventure, discovering plant-based dishes that not only please the 
+                picky palates but are also heathy and delicious.";
+
+            string prompt = @"This is some information about the user's background: {{$history}} 
+                Given this user's background, provide a list of relevant recipes.";
+
+            var result = await kernel.InvokePromptAsync(prompt, 
+                new KernelArguments
+                {
+                    { "history", history }
+                });
+
+            Console.WriteLine(result);
         }
 
         public static async Task CallNativeFunctionsV2(Kernel kernel)
@@ -393,6 +517,56 @@ namespace SemanticKernelApp
             Console.WriteLine(result);
         }
 
+        public static async Task AddSong(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<MusicLibraryPlugin>();
+
+            //The AutoInvokeKernelFunctions setting allows the semantic kernel to automatically call
+            //functions and prompts that are added to your kernel. 
+            OpenAIPromptExecutionSettings settings = new()
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+            };
+
+            string prompt = @"Add this song to the recently played songs list:  title: 'Touch', artist: 'My Cat's Eye', genre: 'Pop'";
+
+            var result = await kernel.InvokePromptAsync(prompt, new(settings));
+
+            Console.WriteLine(result);
+        }
+
+        public static async Task GetConcertRecommendationV2(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<MusicLibraryPlugin>();
+
+            //The AutoInvokeKernelFunctions setting allows the semantic kernel to automatically call
+            //functions and prompts that are added to your kernel. 
+            OpenAIPromptExecutionSettings settings = new()
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+            };
+
+            //Inline prompt 
+            KernelFunction songSuggesterFunction = kernel.CreateFunctionFromPrompt(
+                promptTemplate: @"Based on the user's recently played music: {{$recentlyPlayedSongs}}
+                                recommend a song to the user from the music library: {{$musicLibrary}}",
+                functionName: "SuggestSong",
+                description: "Recommend a song from the library");
+
+            kernel.Plugins.AddFromFunctions("SuggestSong", [songSuggesterFunction]);
+
+            string prompt = "Can you recommend a song from the music library?";
+
+            var result = await kernel.InvokePromptAsync(prompt, new(settings));
+
+            Console.WriteLine(result);
+        }
+
+        /* This module introduces a setting to automatically invoke functions using the Semantic Kernel SDK. 
+        Learn how to use the Semantic Kernel to automatically invoke functions to complete a user's request. 
+        The AutoInvokeKernelFunctions setting allows the semantic kernel to automatically call functions and 
+        prompts that are added to your kernel. This tool can empower you to create dynamic, robust applications 
+        using less code. */
         public static async Task GetConcertRecommendation(Kernel kernel)
         {
             kernel.ImportPluginFromType<MusicLibraryPlugin>();

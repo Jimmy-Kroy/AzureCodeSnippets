@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
+using System.Diagnostics;
+using System.Numerics;
+using System.Reflection.Metadata;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.SemanticKernel;
 
 namespace SemanticKernelApp.Plugins
 {
-    using System.ComponentModel;
-    using System.Numerics;
-    using System.Text.Json;
-    using System.Text.Json.Nodes;
-    using Microsoft.SemanticKernel;
-
     public class MusicLibraryPlugin
     {
         [KernelFunction, Description("Get a list of music recently played by the user")]
@@ -19,6 +15,7 @@ namespace SemanticKernelApp.Plugins
         {
             string dir = Directory.GetCurrentDirectory();
             string content = File.ReadAllText($"{dir}/data/recentlyplayed.json");
+            Debug.WriteLine("GetRecentPlays: " + content);
             return content;
         }
 
@@ -27,6 +24,7 @@ namespace SemanticKernelApp.Plugins
         {
             string dir = Directory.GetCurrentDirectory();
             string content = File.ReadAllText($"{dir}/data/musiclibrary.json");
+            Debug.WriteLine("GetMusicLibrary: " + content );
             return content;
         }
 
@@ -35,6 +33,7 @@ namespace SemanticKernelApp.Plugins
         {
             string dir = Directory.GetCurrentDirectory();
             string content = File.ReadAllText($"{dir}/data/recentlyplayed.json");
+            Debug.WriteLine("GetRecentlyPlayedSongs: " + content);
             return content;
         }
 
@@ -44,6 +43,7 @@ namespace SemanticKernelApp.Plugins
             [Description("The title of the song")] string song,
             [Description("The song genre")] string genre)
         {
+            Debug.WriteLine("AddToRecentlyPlayed: " + artist + ", " + song + ", " + genre);
             // Read the existing content from the file
             string filePath = "data/recentlyplayed.json";
             string jsonContent = File.ReadAllText(filePath);

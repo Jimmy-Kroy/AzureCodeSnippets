@@ -1,0 +1,7 @@
+﻿Based on the user's list of available ingredients:
+{{$availableIngredients}}
+
+And a list of needed ingredients for a given recipe:
+{{$neededIngredients}}
+
+Gets a list of ingredients that are missing from the user's kitchen for a given recipe {{$recipe}}.

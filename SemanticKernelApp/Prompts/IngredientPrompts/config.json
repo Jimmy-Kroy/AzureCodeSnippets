@@ -1,0 +1,28 @@
+﻿{
+  "schema": 1,
+  "type": "completion",
+  "description": "Gets a list of ingredients that are missing from the user's kitchen for a given recipe",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 4000,
+      "temperature": 0
+    }
+  },
+  "input_variables": [
+    {
+      "name": "availableIngredients",
+      "description": "A list of available ingredients for the user",
+      "required": true
+    },
+    {
+      "name": "neededIngredients",
+      "description": "A list of needed ingredients for a given recipe",
+      "required": true
+    },
+    {
+      "name": "recipe",
+      "description": "The user's recipe",
+      "required": true
+    }
+  ]
+}
