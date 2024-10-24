@@ -20,6 +20,8 @@ using SemanticKernelApp.Plugins.TodoList;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using SemanticKernelApp.Plugins.ConvertCurrency;
+using System.Text;
 
 /* Built-in plugins 
 ConversationSummaryPlugin - Summarizes conversation
@@ -50,13 +52,15 @@ namespace SemanticKernelApp
                 string oaiModelName = config["AzureOAIModelName"] ?? "";
                 string oaiModelId = config["AzureOAIModelId"] ?? ""; // optional
 
-                Console.WriteLine("Semantic Kernel app started.");
+                Console.WriteLine("Semantic Kernel app started.\n");
 
                 var builder = Kernel.CreateBuilder();
                 builder.AddAzureOpenAIChatCompletion(oaiModelName, oaiEndpoint, oaiKey);
                 var kernel = builder.Build();
 
-                await GetNeededRecipeIngredients(kernel);
+                await AITravelAgentV2(kernel);
+                //await AITravelAgent(kernel);
+                //await GetNeededRecipeIngredients(kernel);
                 //await AddSong(kernel);
                 //await GetConcertRecommendationV2(kernel);
                 // Result: Based on your recently played music, I recommend you listen to "Kids" by MGMT.
@@ -87,13 +91,201 @@ namespace SemanticKernelApp
                 //await GetBreakfastFoods(kernel);
                 //await GetConcertRecommendation(kernel);
 
-                Console.WriteLine("Semantic Kernel app finished.");
+                Console.WriteLine("\nSemantic Kernel app finished.");
                 Console.ReadLine();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+        }
+
+        //Use the conversation history to provide context to the large language model (LLM).
+        public static async Task AITravelAgentV2(Kernel kernel)
+        {
+            string input;
+            StringBuilder chatHistory = new();
+            OpenAIPromptExecutionSettings settings = new()
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+            };
+
+            kernel.ImportPluginFromType<ConversationSummaryPlugin>();
+            kernel.ImportPluginFromType<CurrencyConverter>();
+            var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
+
+            do
+            {
+                Console.WriteLine("What would you like to do?");
+                input = Console.ReadLine();
+
+                var intent = await kernel.InvokeAsync<string>(
+                      prompts["GetIntent"],
+                      new()
+                      {
+                        { "input", input }
+                      }
+                  );
+
+                Console.WriteLine($"intent: {intent}");
+
+                /* In this code, you use the AutoInvokeKernelFunctions setting to automatically call functions 
+                 * and prompts that are referenced in your kernel. If the user's intent is to convert currency, 
+                 * the CurrencyConverter plugin performs its task. */
+                switch (intent)
+                {
+                    case "ConvertCurrency":
+                        var currencyText = await kernel.InvokeAsync<string>(
+                            prompts["GetTargetCurrencies"],
+                            new() { { "input", input } }
+                        );
+
+                        var currencyInfo = currencyText!.Split("|");
+                        var result = await kernel.InvokeAsync(
+                            "CurrencyConverter", "ConvertAmount",
+                            new()
+                            {
+                                {"targetCurrencyCode", currencyInfo[0]},
+                                {"baseCurrencyCode", currencyInfo[1]},
+                                {"amount", currencyInfo[2]},
+                            }
+                        );
+                        Console.WriteLine(result);
+                        break;
+                    case "SuggestDestinations":
+                        chatHistory.AppendLine("User:" + input);
+                        var recommendations = await kernel.InvokePromptAsync(input!);
+                        Console.WriteLine(recommendations);
+                        break;
+                    case "SuggestActivities":
+                        var chatSummary = await kernel.InvokeAsync(
+                            "ConversationSummaryPlugin",
+                            "SummarizeConversation",
+                            new() 
+                            { 
+                                { "input", chatHistory.ToString() } 
+                            });
+
+                        var activities = await kernel.InvokePromptAsync(
+                            input!,
+                            new() 
+                            {
+                                {"input", input},
+                                {"history", chatSummary},
+                                {"ToolCallBehavior", ToolCallBehavior.AutoInvokeKernelFunctions}
+                            });
+
+                        chatHistory.AppendLine("User:" + input);
+                        chatHistory.AppendLine("Assistant:" + activities.ToString());
+
+                        Console.WriteLine(activities);
+                        break;
+                    case "HelpfulPhrases":
+                    case "Translate":
+                        var autoInvokeResult = await kernel.InvokePromptAsync(input!, new(settings));
+                        Console.WriteLine(autoInvokeResult);
+                        break;
+                    default:
+                        //Console.WriteLine("Other intent detected");
+                        Console.WriteLine("Sure, I can help with that.");
+                        var otherIntentResult = await kernel.InvokePromptAsync(input!);
+                        Console.WriteLine(otherIntentResult);
+                        break;
+                }
+
+            }
+            while (!string.IsNullOrWhiteSpace(input));
+        }
+
+        public static async Task AITravelAgent(Kernel kernel)
+        {
+            kernel.ImportPluginFromType<CurrencyConverter>();
+            var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
+
+            //var result = await kernel.InvokeAsync(
+            //    "CurrencyConverter", "ConvertAmount",
+            //    new KernelArguments() 
+            //    {
+            //        {"targetCurrencyCode", "USD"},
+            //        {"amount", "52000"},
+            //        {"baseCurrencyCode", "BMD"}
+            //    });
+
+            //Console.WriteLine(result);
+
+            //var prompts = kernel.ImportPluginFromPromptDirectory("Prompts");
+
+            //var result = await kernel.InvokeAsync(prompts["GetTargetCurrencies"],
+            //    new KernelArguments() 
+            //    {
+            //        {"input", "How many Australian Dollars is 140,000 Korean Won worth?"}
+            //    }
+            //);
+
+            //Console.WriteLine(result);
+
+            OpenAIPromptExecutionSettings settings = new()
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+            };
+
+            string input = string.Empty;
+
+            do
+            {
+
+                Console.WriteLine("What would you like to do?");
+                input = Console.ReadLine();
+
+                var intent = await kernel.InvokeAsync<string>(
+                    prompts["GetIntent"],
+                    new() 
+                    { 
+                        { "input", input } 
+                    }
+                );
+
+                Console.WriteLine($"intent: {intent}");
+
+                /* In this code, you use the AutoInvokeKernelFunctions setting to automatically call functions 
+                 * and prompts that are referenced in your kernel. If the user's intent is to convert currency, 
+                 * the CurrencyConverter plugin performs its task. */
+                switch (intent)
+                {
+                    case "ConvertCurrency":
+                        var currencyText = await kernel.InvokeAsync<string>(
+                            prompts["GetTargetCurrencies"],
+                            new() { { "input", input } }
+                        );
+
+                        var currencyInfo = currencyText!.Split("|");
+                        var result = await kernel.InvokeAsync(
+                            "CurrencyConverter", "ConvertAmount",
+                            new() 
+                            {
+                                {"targetCurrencyCode", currencyInfo[0]},
+                                {"baseCurrencyCode", currencyInfo[1]},
+                                {"amount", currencyInfo[2]},
+                            }
+                        );
+                        Console.WriteLine(result);
+                        break;
+                    case "SuggestDestinations":
+                    case "SuggestActivities":
+                    case "HelpfulPhrases":
+                    case "Translate":
+                        var autoInvokeResult = await kernel.InvokePromptAsync(input!, new(settings));
+                        Console.WriteLine(autoInvokeResult);
+                        break;
+                    default:
+                        //Console.WriteLine("Other intent detected");
+                        Console.WriteLine("Sure, I can help with that.");
+                        var otherIntentResult = await kernel.InvokePromptAsync(input!, new(settings));
+                        Console.WriteLine(otherIntentResult);
+                        break;
+                }
+            }
+            while (!string.IsNullOrWhiteSpace(input));
         }
 
         public static async Task GetNeededRecipeIngredients(Kernel kernel)
