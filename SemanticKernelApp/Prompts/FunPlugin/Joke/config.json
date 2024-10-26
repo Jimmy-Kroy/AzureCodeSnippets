@@ -1,0 +1,31 @@
+﻿{
+  "schema": 1,
+  "type": "completion",
+  "description": "Generate a funny joke",
+  "execution_settings": {
+    "default": {
+      "max_tokens": 4000,
+      "temperature": 0.9,
+      "top_p": 0.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    }
+  },
+  "input_variables": [
+    {
+      "name": "style",
+      "description": "Jokes the user has told indicating the desired joke style",
+      "required": true,
+    },
+    {
+      "name": "history",
+      "description": "A history of previously told jokes, do not repeat these jokes!",
+      "required": true
+    },
+    {
+      "name": "input",
+      "description": "Joke subject",
+      "required": true,
+    }
+  ]
+}

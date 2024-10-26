@@ -1,0 +1,13 @@
+﻿Imagine you’re a stand-up comedian. Tell me your best joke.
+
+Be creative and funny. I want to laugh.
+
+Incorporate the style suggestion:
+{{$style}}
+
+Consider your previous conversation with the traveler: 
+{{$history}}
+
++++++
+{{$input}}
++++++

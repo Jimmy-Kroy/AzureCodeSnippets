@@ -58,7 +58,9 @@ namespace SemanticKernelApp
                 builder.AddAzureOpenAIChatCompletion(oaiModelName, oaiEndpoint, oaiKey);
                 var kernel = builder.Build();
 
-                await AITravelAgentV2(kernel);
+                await Excuses(kernel);
+                //await Jokes(kernel);
+                //await AITravelAgentV2(kernel);
                 //await AITravelAgent(kernel);
                 //await GetNeededRecipeIngredients(kernel);
                 //await AddSong(kernel);
@@ -97,6 +99,69 @@ namespace SemanticKernelApp
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
+            }
+        }
+
+        public static async Task Excuses(Kernel kernel)
+        {
+            var plugins = kernel.CreatePluginFromPromptDirectory("Prompts/FunPlugin");
+
+            Console.WriteLine("What kind of event?");
+            string input = Console.ReadLine();
+
+            var result = await kernel.InvokeAsync<string>(
+                plugins["Excuses"],
+                new KernelArguments()
+                {
+                    { "input", input },
+                });
+
+            Console.WriteLine(result);
+        }
+
+        /* Tell me a joke about a criminal that became president.
+        Why did the criminal become president? Because he wanted to steal the hearts of the nation!
+
+        Tell me a joke about a president that became a criminal.
+        Why did the president become a criminal? Because he wanted to steal the hearts of the nation... and their tax dollars too!
+
+        Tell me a joke about a politician who turned xenophobic, even though his ancestors were immigrants.
+        Why did the politician, who had immigrant ancestors, turn xenophobic? Because he wanted to build a wall to keep his own family out!
+
+
+        Tell me a joke about a xenophobic politician who painted his black hair blonde, just to appear more appealing to people.
+        Why did the xenophobic politician paint his black hair blonde? Because he thought it would make him look more "golden" to his supporters! */
+        public static async Task Jokes(Kernel kernel)
+        {
+            var plugins = kernel.CreatePluginFromPromptDirectory("Prompts/FunPlugin");
+
+            StringBuilder chatHistory = new StringBuilder();
+            string input;
+
+            //Jokes style
+            string style = FileReader.ReadLinesFromFile("./data/jokes.txt", 1, 100);
+
+            Console.WriteLine("What kind of joke do you want to hear?");
+            input = Console.ReadLine();
+
+            while (!string.IsNullOrWhiteSpace(input))
+            {
+                var result = await kernel.InvokeAsync<string>(
+                    plugins["Joke"],
+                    new KernelArguments()
+                    {
+                        { "style", style },
+                        { "input", input },
+                        { "history", chatHistory }
+                    });
+
+                chatHistory.AppendLine("User:" + input);
+                chatHistory.AppendLine("Assistant:" + result);
+
+                Console.WriteLine(result);
+
+                Console.WriteLine("What kind of joke do you want to hear?");
+                input = Console.ReadLine();
             }
         }
 
