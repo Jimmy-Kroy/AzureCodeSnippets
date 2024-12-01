@@ -17,3 +17,9 @@ The following comments have been added to the application code to indicate where
 - TODO 2.4
 
 Only modify the code in these sections.
+
+## References
+
+The following references are used:
+1. [Templates.cs on GitHub](https://github.com/microsoft/semantic-kernel/blob/main/dotnet/samples/LearnResources/MicrosoftLearn/Templates.cs): Provides examples and templates for using message roles and variables in prompts.
+2. [FunctionsWithinPrompts.cs on GitHub](https://github.com/microsoft/semantic-kernel/blob/main/dotnet/samples/LearnResources/MicrosoftLearn/FunctionsWithinPrompts.cs): Demonstrates the use of functions within prompts for few-shot learning.
