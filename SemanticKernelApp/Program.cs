@@ -128,7 +128,6 @@ namespace SemanticKernelApp
         Tell me a joke about a politician who turned xenophobic, even though his ancestors were immigrants.
         Why did the politician, who had immigrant ancestors, turn xenophobic? Because he wanted to build a wall to keep his own family out!
 
-
         Tell me a joke about a xenophobic politician who painted his black hair blonde, just to appear more appealing to people.
         Why did the xenophobic politician paint his black hair blonde? Because he thought it would make him look more "golden" to his supporters! */
         public static async Task Jokes(Kernel kernel)
